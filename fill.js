@@ -1,132 +1,135 @@
-// Auto Questionnaire Filler Script - Modal/AJAX Version
-// This script automatically fills out all questionnaires using modals/fetch
+// Auto Questionnaire Filler Script - Exact cURL Implementation
+// This script replicates the exact cURL request for each questionnaire
 
 (function() {
     'use strict';
     
     // Configuration
-    const DELAY_BETWEEN_ACTIONS = 800; // Shorter delay for AJAX
-    const DELAY_BETWEEN_QUESTIONNAIRES = 1200;
+    const DELAY_BETWEEN_QUESTIONNAIRES = 1500; // 1.5 seconds between requests
+    const NPM = 2217051133;
     
     // Get all questionnaire buttons
     function getAllQuestionnaireButtons() {
         return document.querySelectorAll("[data-type='cedit']");
     }
     
-    // Fetch questionnaire content via AJAX
-    async function fetchQuestionnaireContent(nip, kelas) {
-        try {
-            const url = `/siakad/data_angket/add/2217051133/${nip}/${kelas}`;
-            console.log(`Fetching questionnaire: ${url}`);
-            
-            const response = await fetch(url, {
-                method: 'GET',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
-                }
-            });
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const html = await response.text();
-            return html;
-            
-        } catch (error) {
-            console.error('Error fetching questionnaire:', error);
-            throw error;
-        }
+    // Get all cookies as a string (like in the cURL)
+    function getAllCookies() {
+        return document.cookie;
     }
     
-    // Submit questionnaire data via AJAX
-    async function submitQuestionnaireData(formData, nip, kelas) {
+    // Submit questionnaire using exact cURL format
+    async function submitQuestionnaire(nip, kelas) {
         try {
-            const url = `/siakad/data_angket/add/2217051133/${nip}/${kelas}`;
-            console.log('Submitting questionnaire data...');
+            const url = `https://siakadu.unila.ac.id/siakad/data_angket/add/${NPM}/${nip}/${kelas}`;
             
+            // Exact form data from cURL
+            const formData = new URLSearchParams();
+            formData.append('jawaban_1', '4');
+            formData.append('jawaban_2', '4');
+            formData.append('jawaban_3', '4');
+            formData.append('jawaban_4', '4');
+            formData.append('jawaban_5', '4');
+            formData.append('jawaban_6', '4');
+            formData.append('jawaban_7', '4');
+            formData.append('jawaban_8', '4');
+            formData.append('jawaban_9', '4');
+            formData.append('jawaban_10', '4');
+            formData.append('jawaban_11', '4');
+            formData.append('jawaban_12', '4');
+            formData.append('jawaban_13', '4');
+            formData.append('jawaban_14', '4');
+            formData.append('jawaban_15', '4');
+            formData.append('jawaban_16', '4');
+            formData.append('isvalid', '1');
+            formData.append('key', '');
+            formData.append('act', 'save');
+            
+            console.log(`Submitting questionnaire: ${url}`);
+            console.log('Form data:', formData.toString());
+            
+            // Exact headers from cURL
             const response = await fetch(url, {
                 method: 'POST',
                 headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json, text/javascript, */*; q=0.01'
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+                    'Accept-Language': 'id,en-US;q=0.9,en;q=0.8,ms;q=0.7,ja;q=0.6',
+                    'Cache-Control': 'max-age=0',
+                    'Connection': 'keep-alive',
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Cookie': getAllCookies(),
+                    'Origin': 'https://siakadu.unila.ac.id',
+                    'Referer': url,
+                    'Sec-Fetch-Dest': 'document',
+                    'Sec-Fetch-Mode': 'navigate',
+                    'Sec-Fetch-Site': 'same-origin',
+                    'Sec-Fetch-User': '?1',
+                    'Upgrade-Insecure-Requests': '1',
+                    'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+                    'sec-ch-ua': '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+                    'sec-ch-ua-mobile': '?0',
+                    'sec-ch-ua-platform': '"Linux"'
                 },
-                body: formData
+                body: formData.toString()
             });
+            
+            console.log(`Response status: ${response.status}`);
             
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             
-            const result = await response.text();
-            console.log('Questionnaire submitted successfully');
-            return result;
+            const responseText = await response.text();
+            console.log('Response received:', responseText.substring(0, 200) + '...');
+            
+            return {
+                success: true,
+                status: response.status,
+                response: responseText
+            };
             
         } catch (error) {
             console.error('Error submitting questionnaire:', error);
-            throw error;
+            return {
+                success: false,
+                error: error.message
+            };
         }
     }
     
-    // Create form data for submission
-    function createFormData() {
-        const formData = new FormData();
-        
-        // Add answers (all set to option 4)
-        for (let i = 1; i <= 16; i++) {
-            formData.append(`jawaban_${i}`, '4');
-        }
-        
-        // Add validation
-        formData.append('isvalid', '1');
-        
-        // Add any other required fields that might be needed
-        formData.append('submit', 'save');
-        
-        return formData;
-    }
-    
-    // Process single questionnaire via AJAX
-    async function processSingleQuestionnaireAjax(button, index, total) {
+    // Process single questionnaire
+    async function processSingleQuestionnaire(button, index, total) {
         try {
             const nip = button.getAttribute('data-nip');
             const kelas = button.getAttribute('data-kelas');
             const courseName = button.closest('tr').querySelector('td:nth-child(3)').textContent.trim();
-            const teacherName = button.closest('tr').querySelector('td:nth-child(4)').textContent.trim();
+            const teacherName = button.closest('tr').querySelector('td:nth-child(4)').textContent.split(' - ')[1] || 'Unknown';
             
             console.log(`\n=== Processing questionnaire ${index + 1} of ${total} ===`);
             console.log(`Course: ${courseName}`);
             console.log(`Teacher: ${teacherName}`);
             console.log(`NIP: ${nip}, Kelas: ${kelas}`);
             
-            // Update progress indicator
+            // Update progress
             updateProgressIndicator(index + 1, total, courseName);
             
-            // Fetch questionnaire (to ensure it exists and get any required tokens)
-            await fetchQuestionnaireContent(nip, kelas);
+            // Submit questionnaire
+            const result = await submitQuestionnaire(nip, kelas);
             
-            // Wait a bit
-            await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_ACTIONS));
-            
-            // Create and submit form data
-            const formData = createFormData();
-            await submitQuestionnaireData(formData, nip, kelas);
-            
-            console.log(`✓ Questionnaire ${index + 1} completed successfully`);
-            
-            // Mark as completed in the UI
-            markQuestionnaireAsCompleted(button);
-            
-            // Wait before next questionnaire
-            if (index < total - 1) {
-                await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_QUESTIONNAIRES));
+            if (result.success) {
+                console.log(`✅ Questionnaire ${index + 1} submitted successfully`);
+                markQuestionnaireAsCompleted(button);
+                return { success: true };
+            } else {
+                console.log(`❌ Questionnaire ${index + 1} failed: ${result.error}`);
+                markQuestionnaireAsError(button);
+                return { success: false, error: result.error };
             }
             
         } catch (error) {
-            console.error(`✗ Error processing questionnaire ${index + 1}:`, error);
+            console.error(`❌ Error processing questionnaire ${index + 1}:`, error);
             markQuestionnaireAsError(button);
-            throw error;
+            return { success: false, error: error.message };
         }
     }
     
@@ -147,17 +150,22 @@
             border-radius: 8px;
             padding: 15px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            min-width: 300px;
+            min-width: 320px;
             font-family: Arial, sans-serif;
         `;
         
         progressDiv.innerHTML = `
-            <div style="font-weight: bold; margin-bottom: 10px;">Auto-filling Questionnaires</div>
+            <div style="font-weight: bold; margin-bottom: 10px; color: #007bff;">🚀 Auto-filling Questionnaires</div>
             <div id="progress-bar" style="background: #f0f0f0; height: 20px; border-radius: 10px; margin-bottom: 10px;">
-                <div id="progress-fill" style="background: #28a745; height: 100%; border-radius: 10px; width: 0%; transition: width 0.3s;"></div>
+                <div id="progress-fill" style="background: linear-gradient(90deg, #28a745, #20c997); height: 100%; border-radius: 10px; width: 0%; transition: width 0.3s;"></div>
             </div>
-            <div id="progress-text">Initializing...</div>
-            <div id="current-course" style="font-size: 12px; color: #666; margin-top: 5px;"></div>
+            <div id="progress-text" style="font-weight: bold;">Initializing...</div>
+            <div id="current-course" style="font-size: 12px; color: #666; margin-top: 5px; word-wrap: break-word;"></div>
+            <div id="progress-stats" style="font-size: 11px; color: #888; margin-top: 8px; display: flex; justify-content: space-between;">
+                <span>✅ <span id="success-count">0</span></span>
+                <span>❌ <span id="error-count">0</span></span>
+                <span>⏱️ <span id="time-elapsed">0s</span></span>
+            </div>
         `;
         
         document.body.appendChild(progressDiv);
@@ -176,206 +184,263 @@
         }
         
         if (progressText) {
-            progressText.textContent = `Processing ${current} of ${total}`;
+            progressText.textContent = `Processing ${current} of ${total} (${Math.round((current/total)*100)}%)`;
         }
         
         if (currentCourse) {
-            currentCourse.textContent = courseName;
+            currentCourse.textContent = `📚 ${courseName}`;
         }
     }
     
-    // Mark questionnaire as completed in UI
+    // Update statistics
+    function updateStats(successCount, errorCount, startTime) {
+        const successEl = document.getElementById('success-count');
+        const errorEl = document.getElementById('error-count');
+        const timeEl = document.getElementById('time-elapsed');
+        
+        if (successEl) successEl.textContent = successCount;
+        if (errorEl) errorEl.textContent = errorCount;
+        if (timeEl) {
+            const elapsed = Math.round((Date.now() - startTime) / 1000);
+            timeEl.textContent = `${elapsed}s`;
+        }
+    }
+    
+    // Mark questionnaire as completed
     function markQuestionnaireAsCompleted(button) {
         const row = button.closest('tr');
         row.style.backgroundColor = '#d4edda';
+        row.style.transition = 'background-color 0.3s';
         
         // Update status columns
         const diisiCell = row.querySelector('td:nth-child(5)');
         const validCell = row.querySelector('td:nth-child(6)');
         
-        if (diisiCell) diisiCell.innerHTML = '<i class="fa fa-check text-success"></i>';
-        if (validCell) validCell.innerHTML = '<i class="fa fa-check text-success"></i>';
+        if (diisiCell) diisiCell.innerHTML = '<i class="fa fa-check text-success" title="Filled"></i>';
+        if (validCell) validCell.innerHTML = '<i class="fa fa-check text-success" title="Validated"></i>';
         
-        // Disable button
+        // Update button
         button.disabled = true;
         button.innerHTML = '<i class="fa fa-check"></i>';
         button.classList.remove('btn-info');
         button.classList.add('btn-success');
+        button.title = 'Completed';
     }
     
-    // Mark questionnaire as error in UI
+    // Mark questionnaire as error
     function markQuestionnaireAsError(button) {
         const row = button.closest('tr');
         row.style.backgroundColor = '#f8d7da';
+        row.style.transition = 'background-color 0.3s';
         
         button.classList.remove('btn-info');
         button.classList.add('btn-danger');
         button.innerHTML = '<i class="fa fa-times"></i>';
+        button.title = 'Error occurred';
     }
     
-    // Main function to process all questionnaires via AJAX
+    // Main function to process all questionnaires
     async function processAllQuestionnaires() {
+        const startTime = Date.now();
+        
         try {
             const buttons = Array.from(getAllQuestionnaireButtons());
             
             if (buttons.length === 0) {
-                alert('No questionnaire buttons found');
+                alert('No questionnaire buttons found!');
                 return;
             }
             
-            console.log(`Found ${buttons.length} questionnaires to process`);
+            console.log(`🎯 Starting auto-fill process for ${buttons.length} questionnaires`);
+            console.log('📋 Each questionnaire will be filled with highest ratings (option 4) and validated');
             
             // Create progress indicator
-            const progressDiv = createProgressIndicator();
+            createProgressIndicator();
             
             let successCount = 0;
             let errorCount = 0;
+            const errors = [];
             
             // Process each questionnaire
             for (let i = 0; i < buttons.length; i++) {
-                try {
-                    await processSingleQuestionnaireAjax(buttons[i], i, buttons.length);
+                const result = await processSingleQuestionnaire(buttons[i], i, buttons.length);
+                
+                if (result.success) {
                     successCount++;
-                } catch (error) {
+                } else {
                     errorCount++;
-                    console.error(`Failed to process questionnaire ${i + 1}:`, error);
-                    
-                    // Ask user if they want to continue
-                    const continueProcessing = confirm(`Error processing questionnaire ${i + 1}. Continue with remaining questionnaires?`);
-                    if (!continueProcessing) {
-                        break;
-                    }
+                    errors.push(`Questionnaire ${i + 1}: ${result.error}`);
+                }
+                
+                // Update statistics
+                updateStats(successCount, errorCount, startTime);
+                
+                // Wait between requests (except for the last one)
+                if (i < buttons.length - 1) {
+                    console.log(`⏳ Waiting ${DELAY_BETWEEN_QUESTIONNAIRES/1000}s before next questionnaire...`);
+                    await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_QUESTIONNAIRES));
                 }
             }
             
-            // Update final progress
+            // Final results
+            const totalTime = Math.round((Date.now() - startTime) / 1000);
             const progressText = document.getElementById('progress-text');
             const currentCourse = document.getElementById('current-course');
             
             if (progressText) {
-                progressText.textContent = `Completed! Success: ${successCount}, Errors: ${errorCount}`;
+                progressText.textContent = `🎉 Completed! ${successCount}/${buttons.length} successful`;
+                progressText.style.color = successCount === buttons.length ? '#28a745' : '#ffc107';
             }
             if (currentCourse) {
-                currentCourse.textContent = 'All questionnaires processed';
+                currentCourse.textContent = `✨ All questionnaires processed in ${totalTime}s`;
             }
             
-            // Show final result
-            const message = `Process completed!\n\nSuccessful: ${successCount}\nErrors: ${errorCount}\nTotal: ${buttons.length}`;
+            // Show results
+            let message = `🎉 Auto-fill Process Completed!\n\n`;
+            message += `📊 Results:\n`;
+            message += `✅ Successful: ${successCount}\n`;
+            message += `❌ Errors: ${errorCount}\n`;
+            message += `📝 Total: ${buttons.length}\n`;
+            message += `⏱️ Time taken: ${totalTime} seconds\n`;
+            
+            if (errorCount > 0) {
+                message += `\n❌ Errors encountered:\n${errors.slice(0, 3).join('\n')}`;
+                if (errors.length > 3) {
+                    message += `\n... and ${errors.length - 3} more (check console)`;
+                }
+            }
+            
             alert(message);
             
-            console.log('=== Final Results ===');
-            console.log(`Successful: ${successCount}`);
-            console.log(`Errors: ${errorCount}`);
-            console.log(`Total: ${buttons.length}`);
+            console.log('\n=== 🏁 FINAL RESULTS ===');
+            console.log(`✅ Successful: ${successCount}`);
+            console.log(`❌ Errors: ${errorCount}`);
+            console.log(`📝 Total: ${buttons.length}`);
+            console.log(`⏱️ Time taken: ${totalTime} seconds`);
+            
+            if (errors.length > 0) {
+                console.log('\n❌ Error details:');
+                errors.forEach(error => console.log(`  - ${error}`));
+            }
             
         } catch (error) {
-            console.error('Error in processAllQuestionnaires:', error);
-            alert('An error occurred while processing questionnaires. Check console for details.');
+            console.error('❌ Critical error in processAllQuestionnaires:', error);
+            alert(`Critical error occurred: ${error.message}\n\nCheck console for details.`);
         }
     }
     
-    // Detect current page and add UI
-    function detectPageAndAddUI() {
+    // Add UI controls
+    function addUIControls() {
         const buttons = getAllQuestionnaireButtons();
         
-        if (buttons.length > 0) {
-            console.log(`Detected questionnaire list page with ${buttons.length} questionnaires`);
-            
-            // Add start button
-            const startButton = document.createElement('button');
-            startButton.textContent = `Auto Fill All Questionnaires (${buttons.length})`;
-            startButton.className = 'btn btn-primary btn-lg';
-            startButton.style.cssText = `
-                position: fixed;
-                top: 10px;
-                right: 10px;
-                z-index: 9999;
-                background-color: #007bff;
-                color: white;
-                border: none;
-                padding: 12px 20px;
-                border-radius: 6px;
-                cursor: pointer;
-                font-weight: bold;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            `;
-            
-            startButton.onmouseover = function() {
-                this.style.backgroundColor = '#0056b3';
-            };
-            
-            startButton.onmouseout = function() {
-                this.style.backgroundColor = '#007bff';
-            };
-            
-            startButton.onclick = function() {
-                const message = `This will automatically fill all ${buttons.length} questionnaires using AJAX requests.\n\nEach questionnaire will be:\n- Filled with highest ratings (option 4)\n- Validated\n- Saved\n\nContinue?`;
-                
-                if (confirm(message)) {
-                    startButton.style.display = 'none';
-                    processAllQuestionnaires();
-                }
-            };
-            
-            document.body.appendChild(startButton);
-            
-            // Add individual test button for first questionnaire
-            const testButton = document.createElement('button');
-            testButton.textContent = 'Test Single';
-            testButton.className = 'btn btn-warning btn-sm';
-            testButton.style.cssText = `
-                position: fixed;
-                top: 60px;
-                right: 10px;
-                z-index: 9999;
-                background-color: #ffc107;
-                color: black;
-                border: none;
-                padding: 8px 12px;
-                border-radius: 4px;
-                cursor: pointer;
-                font-size: 12px;
-            `;
-            
-            testButton.onclick = function() {
-                if (confirm('Test with first questionnaire only?')) {
-                    testButton.style.display = 'none';
-                    processSingleQuestionnaireAjax(buttons[0], 0, 1).catch(console.error);
-                }
-            };
-            
-            document.body.appendChild(testButton);
+        if (buttons.length === 0) {
+            console.log('No questionnaire buttons found on this page');
+            return;
         }
+        
+        console.log(`🎯 Found ${buttons.length} questionnaires ready for auto-fill`);
+        
+        // Main start button
+        const startButton = document.createElement('button');
+        startButton.textContent = `🚀 Auto Fill All (${buttons.length})`;
+        startButton.className = 'btn btn-primary btn-lg';
+        startButton.style.cssText = `
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 9999;
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0,123,255,0.3);
+            transition: all 0.3s;
+        `;
+        
+        startButton.onmouseover = function() {
+            this.style.transform = 'translateY(-2px)';
+            this.style.boxShadow = '0 6px 16px rgba(0,123,255,0.4)';
+        };
+        
+        startButton.onmouseout = function() {
+            this.style.transform = 'translateY(0)';
+            this.style.boxShadow = '0 4px 12px rgba(0,123,255,0.3)';
+        };
+        
+        startButton.onclick = function() {
+            const message = `🎯 Auto-fill ${buttons.length} questionnaires?\n\n` +
+                          `📝 Each questionnaire will be:\n` +
+                          `• Filled with highest ratings (option 4)\n` +
+                          `• Marked as valid\n` +
+                          `• Automatically saved\n\n` +
+                          `⏱️ Estimated time: ${Math.ceil(buttons.length * DELAY_BETWEEN_QUESTIONNAIRES / 1000)} seconds\n\n` +
+                          `Continue?`;
+            
+            if (confirm(message)) {
+                startButton.style.display = 'none';
+                processAllQuestionnaires();
+            }
+        };
+        
+        document.body.appendChild(startButton);
+        
+        // Test single button
+        const testButton = document.createElement('button');
+        testButton.textContent = '🧪 Test First';
+        testButton.className = 'btn btn-warning btn-sm';
+        testButton.style.cssText = `
+            position: fixed;
+            top: 60px;
+            right: 150px;
+            z-index: 9999;
+            background: #ffc107;
+            color: #212529;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+        `;
+        
+        testButton.onclick = function() {
+            if (confirm('🧪 Test with the first questionnaire only?')) {
+                testButton.style.display = 'none';
+                createProgressIndicator();
+                processSingleQuestionnaire(buttons[0], 0, 1);
+            }
+        };
+        
+        document.body.appendChild(testButton);
     }
     
-    // Initialize when page loads
+    // Initialize
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', detectPageAndAddUI);
+        document.addEventListener('DOMContentLoaded', addUIControls);
     } else {
-        detectPageAndAddUI();
+        addUIControls();
     }
     
-    // Export functions for manual use
+    // Export functions
     window.autoQuestionnaire = {
         processAll: processAllQuestionnaires,
-        processSingle: (index) => {
-            const buttons = getAllQuestionnaireButtons();
-            if (buttons[index]) {
-                return processSingleQuestionnaireAjax(buttons[index], index, buttons.length);
-            }
-        },
         testFirst: () => {
             const buttons = getAllQuestionnaireButtons();
             if (buttons[0]) {
-                return processSingleQuestionnaireAjax(buttons[0], 0, 1);
+                createProgressIndicator();
+                return processSingleQuestionnaire(buttons[0], 0, 1);
             }
-        }
+        },
+        submit: submitQuestionnaire
     };
     
-    console.log('Auto Questionnaire Filler (AJAX Version) loaded successfully!');
-    console.log('Available functions:');
-    console.log('- autoQuestionnaire.processAll() - Process all questionnaires');
-    console.log('- autoQuestionnaire.processSingle(index) - Process specific questionnaire');
-    console.log('- autoQuestionnaire.testFirst() - Test with first questionnaire');
+    console.log('🚀 Auto Questionnaire Filler (cURL Implementation) loaded!');
+    console.log('📋 Available functions:');
+    console.log('  • autoQuestionnaire.processAll() - Process all questionnaires');
+    console.log('  • autoQuestionnaire.testFirst() - Test first questionnaire');
+    console.log('  • autoQuestionnaire.submit(nip, kelas) - Submit specific questionnaire');
     
 })();
