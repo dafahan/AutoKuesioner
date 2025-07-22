@@ -13,7 +13,7 @@ Kuesioner Filler ini dibuat khusus untuk mahasiswa Universitas Lampung (UNILA) y
 1. Buka halaman kuesioner yang ingin diisi.
 2. Lakukan "Inspect Element" atau tekan `fn + F12` untuk membuka Developer Tools.
 3. Salin seluruh kode dari file `fill.js`.
-4. Tempelkan kode tersebut di console Developer Tools dan tekan `Enter`.
+4. Tempelkan kode tersebut di console Developer Tools lalu ubah variabel NPM dengan NPM anda dan tekan `Enter`.
 
 **Catatan:** Pastikan untuk memahami etika penggunaan dan konsekuensi dari penggunaan otomatisasi ini. Jangan gunakan untuk tindakan yang melanggar aturan atau kebijakan institusi.
 
